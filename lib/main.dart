@@ -9,8 +9,12 @@ import 'services/supabase_service.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: '.env');
+  // Load environment variables (.env may not exist on Vercel — that's OK)
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // .env file missing — Supabase will run in demo mode
+  }
 
   // Initialize Supabase
   await SupabaseService.initialize();
