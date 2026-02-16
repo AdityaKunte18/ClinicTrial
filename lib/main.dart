@@ -22,15 +22,17 @@ Future<void> main() async {
   runApp(const ProviderScope(child: ClinicalPilotApp()));
 }
 
-class ClinicalPilotApp extends StatelessWidget {
+class ClinicalPilotApp extends ConsumerWidget {
   const ClinicalPilotApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
     return MaterialApp.router(
       title: 'ClinicalPilot',
       theme: AppTheme.lightTheme,
-      routerConfig: appRouter,
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
   }

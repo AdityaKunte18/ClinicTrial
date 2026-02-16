@@ -33,6 +33,12 @@ class SupabaseService {
     }
   }
 
+  /// True when Supabase is not configured — switches to in-memory demo repo.
+  static bool get isDemoMode => !_initialized;
+
+  /// GoTrueClient when initialized, null in demo mode.
+  static GoTrueClient? get authOrNull => _initialized ? client.auth : null;
+
   // Auth shortcuts — safe to call only when initialized
   static GoTrueClient get auth => client.auth;
   static User? get currentUser => _initialized ? auth.currentUser : null;

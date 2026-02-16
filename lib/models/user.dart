@@ -17,6 +17,8 @@ enum UserRole {
 
 class AppUser {
   final String id;
+  /// Supabase Auth uid — only set in production mode.
+  final String? authId;
   final String name;
   final String email;
   final String? phone;
@@ -27,6 +29,7 @@ class AppUser {
 
   AppUser({
     required this.id,
+    this.authId,
     required this.name,
     required this.email,
     this.phone,
@@ -39,6 +42,7 @@ class AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) {
     return AppUser(
       id: json['id'] as String,
+      authId: json['auth_id'] as String?,
       name: json['name'] as String,
       email: json['email'] as String,
       phone: json['phone'] as String?,
@@ -52,6 +56,7 @@ class AppUser {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (authId != null) 'auth_id': authId,
       'name': name,
       'email': email,
       'phone': phone,
@@ -64,6 +69,7 @@ class AppUser {
 
   AppUser copyWith({
     String? id,
+    String? authId,
     String? name,
     String? email,
     String? phone,
@@ -74,6 +80,7 @@ class AppUser {
   }) {
     return AppUser(
       id: id ?? this.id,
+      authId: authId ?? this.authId,
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,

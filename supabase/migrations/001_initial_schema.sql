@@ -10,38 +10,6 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================================================
--- HELPER FUNCTION: get_user_hospital_id()
--- Returns the hospital_id for the currently authenticated Supabase user.
--- Used throughout RLS policies to scope data access per hospital.
--- ============================================================================
-CREATE OR REPLACE FUNCTION public.get_user_hospital_id()
-RETURNS UUID
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT hospital_id
-  FROM public.users
-  WHERE auth_id = auth.uid()
-  LIMIT 1;
-$$;
-
--- Helper: returns the role of the currently authenticated user.
-CREATE OR REPLACE FUNCTION public.get_user_role()
-RETURNS TEXT
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT role
-  FROM public.users
-  WHERE auth_id = auth.uid()
-  LIMIT 1;
-$$;
-
--- ============================================================================
 -- TABLE 1: hospitals
 -- Core hospital registry. All data is scoped to a hospital.
 -- ============================================================================
@@ -74,6 +42,39 @@ CREATE TABLE public.users (
 );
 
 COMMENT ON TABLE public.users IS 'Application user profiles linked to Supabase Auth';
+
+-- ============================================================================
+-- HELPER FUNCTION: get_user_hospital_id()
+-- Returns the hospital_id for the currently authenticated Supabase user.
+-- Used throughout RLS policies to scope data access per hospital.
+-- NOTE: Defined after public.users table is created.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.get_user_hospital_id()
+RETURNS UUID
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT hospital_id
+  FROM public.users
+  WHERE auth_id = auth.uid()
+  LIMIT 1;
+$$;
+
+-- Helper: returns the role of the currently authenticated user.
+CREATE OR REPLACE FUNCTION public.get_user_role()
+RETURNS TEXT
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role
+  FROM public.users
+  WHERE auth_id = auth.uid()
+  LIMIT 1;
+$$;
 
 -- ============================================================================
 -- TABLE 3: patients
@@ -352,11 +353,12 @@ ALTER TABLE public.audit_log              ENABLE ROW LEVEL SECURITY;
 
 -- --------------------------------------------------------------------------
 -- POLICY: hospitals
--- Users can view their own hospital. Admins can manage their hospital record.
+-- Any authenticated user can view hospitals (needed during signup & general use).
+-- Admins can manage their hospital record.
 -- --------------------------------------------------------------------------
-CREATE POLICY "hospitals_select_own"
+CREATE POLICY "hospitals_select_authenticated"
   ON public.hospitals FOR SELECT
-  USING (id = public.get_user_hospital_id());
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "hospitals_admin_insert"
   ON public.hospitals FOR INSERT
@@ -379,14 +381,23 @@ CREATE POLICY "users_select_same_hospital"
 CREATE POLICY "users_admin_insert"
   ON public.users FOR INSERT
   WITH CHECK (
-    hospital_id = public.get_user_hospital_id()
-    AND public.get_user_role() = 'admin'
+    EXISTS (
+      SELECT 1 FROM public.users u
+      WHERE u.auth_id = auth.uid()
+        AND u.role = 'admin'
+        AND u.hospital_id = hospital_id
+    )
   );
 
 CREATE POLICY "users_admin_update"
   ON public.users FOR UPDATE
   USING (hospital_id = public.get_user_hospital_id() AND public.get_user_role() = 'admin')
   WITH CHECK (hospital_id = public.get_user_hospital_id() AND public.get_user_role() = 'admin');
+
+-- Allow new users to insert their own profile during signup
+CREATE POLICY "users_self_insert"
+  ON public.users FOR INSERT
+  WITH CHECK (auth_id = auth.uid());
 
 -- Allow users to update their own profile (e.g., phone, name)
 CREATE POLICY "users_self_update"
