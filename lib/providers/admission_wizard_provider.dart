@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../data/demo_data.dart';
 import '../models/models.dart';
 import '../utils/workup_generator.dart';
 import 'auth_provider.dart';
@@ -115,11 +116,12 @@ class AdmissionWizardNotifier extends StateNotifier<AdmissionWizardState> {
       final admission = Admission(
         id: uuid.v4(),
         patientId: state.selectedPatient!.id,
-        hospitalId: authState.user!.hospitalId,
+        hospitalId:
+            authState.user?.hospitalId ?? DemoData.demoHospitalId,
         bedNumber: state.bedNumber,
         admissionDate: now,
         expectedDischarge: now.add(const Duration(days: 5)),
-        admittingDoctorId: authState.user!.id,
+        admittingDoctorId: authState.user?.id ?? DemoData.demoUserId,
         status: AdmissionStatus.active,
         currentDay: 1,
         dischargeBlocked: false,
