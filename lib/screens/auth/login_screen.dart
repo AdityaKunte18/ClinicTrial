@@ -31,6 +31,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         .signInWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
   }
 
+  void _signInDemo() {
+    ref.read(authProvider.notifier).signInDemo();
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider);
@@ -147,7 +151,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('Create an account'),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+
+                  // ── Divider ───────────────────────────────
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('OR',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(
+                                    color:
+                                        theme.colorScheme.onSurfaceVariant)),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Demo Mode Button ──────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton.icon(
+                      onPressed: _signInDemo,
+                      icon: const Icon(Icons.science_outlined),
+                      label: const Text('Continue as Demo'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+                  Text(
+                    'No account needed. Explore with sample data.',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),

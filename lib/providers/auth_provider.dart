@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 
+import '../data/demo_data.dart';
 import '../models/models.dart';
 import '../services/supabase_service.dart';
 import 'repository_providers.dart';
@@ -81,6 +82,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // User authenticated but no profile yet — keep auth, user is null
       state = const AuthState(mode: AuthMode.supabase);
     }
+  }
+
+  /// Sign in as demo user (no network needed).
+  void signInDemo() {
+    state = AuthState(mode: AuthMode.demo, user: DemoData.demoUser);
   }
 
   /// Sign in with email & password via Supabase.
