@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../data/demo_data.dart';
 import '../data/syndrome_seed_data.dart';
 import '../models/models.dart';
+import '../utils/workup_generator.dart';
 import 'data_repository.dart';
 
 /// In-memory implementation of [DataRepository] for demo / offline mode.
@@ -49,6 +50,83 @@ class InMemoryRepository implements DataRepository {
     for (final sp in SyndromeSeedData.allProtocols) {
       _syndromes[sp.id] = sp;
     }
+
+    // Generate workup items for demo admissions from their linked syndromes
+    for (final as_ in DemoData.sampleAdmissionSyndromes) {
+      final protocol = _syndromes[as_.syndromeId];
+      if (protocol != null) {
+        final items = generateWorkupItems(
+          admissionId: as_.admissionId,
+          protocol: protocol,
+        );
+        for (final item in items) {
+          _workupItems[item.id] = item;
+        }
+      }
+    }
+
+    // Make demo data realistic: vary statuses for some items
+    _applyRealisticStatuses();
+  }
+
+  /// Updates a subset of demo workup items to varied statuses so screens
+  /// like Timeline, Discharge, and Tasks show meaningful data.
+  void _applyRealisticStatuses() {
+    final now = DateTime.now();
+
+    // demo-adm-001 (Day 3, CKD + Electrolyte) — some Day 1 items done, Day 2 mixed
+    _updateItemsByAdmission('demo-adm-001', (items) {
+      for (final item in items) {
+        if (item.targetDay != null && item.targetDay! <= 1) {
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.done,
+            completedAt: now.subtract(const Duration(days: 1)),
+          );
+        } else if (item.targetDay == 2 &&
+            item.domain == WorkupDomain.blood) {
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.resulted,
+            resultValue: 'Within normal limits',
+          );
+        } else if (item.targetDay == 2) {
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.ordered,
+          );
+        }
+      }
+    });
+
+    // demo-adm-002 (Day 1, Fever) — all pending (just admitted)
+    // No changes needed, items are already pending.
+
+    // demo-adm-003 (Day 4, GI/Hepatology + Hematology, discharge blocked)
+    // Mark most non-hard-block items as done, leave hard-blocks pending
+    _updateItemsByAdmission('demo-adm-003', (items) {
+      for (final item in items) {
+        if (item.isHardBlock) {
+          // Leave hard-blocks pending to demonstrate discharge blocking
+          continue;
+        }
+        if (item.targetDay != null && item.targetDay! <= 3) {
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.done,
+            completedAt: now.subtract(Duration(days: 4 - item.targetDay!)),
+          );
+        } else if (item.targetDay == 4) {
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.ordered,
+          );
+        }
+      }
+    });
+  }
+
+  void _updateItemsByAdmission(
+      String admissionId, void Function(List<WorkupItem>) updater) {
+    final items = _workupItems.values
+        .where((w) => w.admissionId == admissionId)
+        .toList();
+    updater(items);
   }
 
   // ── Auth / User ───────────────────────────────────────────────────

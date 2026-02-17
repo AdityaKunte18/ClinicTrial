@@ -59,11 +59,20 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
                 case 'profile':
                   context.push('/settings/profile');
                   break;
+                case 'tasks':
+                  context.push('/tasks');
+                  break;
                 case 'templates':
                   context.push('/settings/templates');
                   break;
                 case 'mjpjay':
                   context.push('/settings/mjpjay');
+                  break;
+                case 'guidelines':
+                  context.push('/guidelines');
+                  break;
+                case 'ai':
+                  context.push('/settings/ai');
                   break;
                 case 'logout':
                   ref.read(authProvider.notifier).signOut();
@@ -74,9 +83,15 @@ class _PatientListScreenState extends ConsumerState<PatientListScreen> {
               const PopupMenuItem(
                   value: 'profile', child: Text('Profile')),
               const PopupMenuItem(
+                  value: 'tasks', child: Text('My Tasks')),
+              const PopupMenuItem(
                   value: 'templates', child: Text('Templates')),
               const PopupMenuItem(
                   value: 'mjpjay', child: Text('MJPJAY/PMJAY')),
+              const PopupMenuItem(
+                  value: 'guidelines', child: Text('Guidelines')),
+              const PopupMenuItem(
+                  value: 'ai', child: Text('AI Features')),
               const PopupMenuDivider(),
               const PopupMenuItem(
                   value: 'logout', child: Text('Sign Out')),
