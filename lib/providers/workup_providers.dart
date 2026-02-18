@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
+import '../screens/workup/widgets/workup_helpers.dart';
 import 'patient_providers.dart';
 import 'repository_providers.dart';
+import 'syndrome_providers.dart';
 
 // ── Workup items for a single admission ─────────────────────────────
 
@@ -141,4 +143,136 @@ final allTasksProvider = FutureProvider<TaskGroups>((ref) async {
     upcoming: upcoming,
     noDay: noDay,
   );
+});
+
+// ── Day simulation ──────────────────────────────────────────────────
+
+/// Holds simulated day per admission. null = use admission.currentDay.
+final simulatedDayProvider =
+    StateProvider.family<int?, String>((ref, admissionId) => null);
+
+/// Resolved effective day: simulated if set, otherwise admission.currentDay.
+final effectiveDayProvider =
+    FutureProvider.family<int, String>((ref, admissionId) async {
+  final simulated = ref.watch(simulatedDayProvider(admissionId));
+  if (simulated != null) return simulated;
+  final admission =
+      await ref.watch(admissionByIdProvider(admissionId).future);
+  return admission?.currentDay ?? 1;
+});
+
+// ── Progress tracking ───────────────────────────────────────────────
+
+/// Progress stats for a single domain.
+class DomainProgress {
+  final WorkupDomain domain;
+  final int total;
+  final int completed;
+
+  DomainProgress({
+    required this.domain,
+    required this.total,
+    required this.completed,
+  });
+
+  double get percent => total == 0 ? 0 : completed / total;
+}
+
+/// Aggregate progress stats for an admission.
+class WorkupProgress {
+  final int totalItems;
+  final int completedItems;
+  final int requiredItems;
+  final int requiredCompleted;
+  final int alertCount;
+  final bool canDischarge;
+  final Map<WorkupDomain, DomainProgress> byDomain;
+
+  WorkupProgress({
+    required this.totalItems,
+    required this.completedItems,
+    required this.requiredItems,
+    required this.requiredCompleted,
+    required this.alertCount,
+    required this.canDischarge,
+    required this.byDomain,
+  });
+
+  double get overallPercent =>
+      totalItems == 0 ? 0 : completedItems / totalItems;
+
+  double get requiredPercent =>
+      requiredItems == 0 ? 0 : requiredCompleted / requiredItems;
+}
+
+/// Computes overall and per-domain progress for an admission.
+final workupProgressProvider =
+    FutureProvider.family<WorkupProgress, String>((ref, admissionId) async {
+  final items = await ref.watch(workupItemsProvider(admissionId).future);
+  final effectiveDay =
+      await ref.watch(effectiveDayProvider(admissionId).future);
+  final dischargeCheck =
+      await ref.watch(dischargeCheckProvider(admissionId).future);
+
+  // Only clinical domains (6 tabs)
+  final clinicalItems = items
+      .where(
+          (i) => WorkupHelpers.clinicalDomains.contains(i.domain))
+      .toList();
+
+  final totalItems = clinicalItems.length;
+  final completedItems =
+      clinicalItems.where((i) => WorkupHelpers.isCompleted(i.status)).length;
+  final requiredItems = clinicalItems.where((i) => i.isRequired).length;
+  final requiredCompleted = clinicalItems
+      .where((i) => i.isRequired && WorkupHelpers.isCompleted(i.status))
+      .length;
+
+  // Overdue: targetDay < effectiveDay and not complete
+  final alertCount = clinicalItems
+      .where((i) =>
+          i.targetDay != null &&
+          i.targetDay! < effectiveDay &&
+          !WorkupHelpers.isCompleted(i.status))
+      .length;
+
+  // Per-domain breakdown
+  final byDomain = <WorkupDomain, DomainProgress>{};
+  for (final domain in WorkupHelpers.clinicalDomains) {
+    final domainItems =
+        clinicalItems.where((i) => i.domain == domain).toList();
+    byDomain[domain] = DomainProgress(
+      domain: domain,
+      total: domainItems.length,
+      completed: domainItems
+          .where((i) => WorkupHelpers.isCompleted(i.status))
+          .length,
+    );
+  }
+
+  return WorkupProgress(
+    totalItems: totalItems,
+    completedItems: completedItems,
+    requiredItems: requiredItems,
+    requiredCompleted: requiredCompleted,
+    alertCount: alertCount,
+    canDischarge: dischargeCheck.canDischarge,
+    byDomain: byDomain,
+  );
+});
+
+// ── Syndrome names for display ──────────────────────────────────────
+
+/// Resolves syndrome protocol names for an admission.
+final admissionSyndromeNamesProvider =
+    FutureProvider.family<List<String>, String>((ref, admissionId) async {
+  final syndromes =
+      await ref.watch(admissionSyndromesProvider(admissionId).future);
+  final names = <String>[];
+  for (final s in syndromes) {
+    final protocol =
+        await ref.watch(syndromeProtocolByIdProvider(s.syndromeId).future);
+    if (protocol != null) names.add(protocol.name);
+  }
+  return names;
 });

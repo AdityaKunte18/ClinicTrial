@@ -14,6 +14,9 @@ class AppTheme {
   static const Color statusOverdue = Color(0xFFEF5350);
   static const Color statusDone = Color(0xFF2E7D32);
 
+  // Patient info card background
+  static const Color patientCardBg = Color(0xFF1A237E); // Dark navy
+
   // Day colors for timeline
   static const Color day1 = Color(0xFF1565C0);
   static const Color day2 = Color(0xFF00897B);

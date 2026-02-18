@@ -85,6 +85,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/workup/:admissionId',
         builder: (context, state) => WorkupDashboardScreen(
           admissionId: state.pathParameters['admissionId']!,
+          initialTab: state.uri.queryParameters['tab'],
         ),
       ),
       GoRoute(
