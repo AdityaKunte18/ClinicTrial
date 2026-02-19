@@ -66,8 +66,47 @@ class InMemoryRepository implements DataRepository {
       }
     }
 
+    // Seed pre-applied classification events
+    for (final evt in DemoData.sampleClassificationEvents) {
+      _classificationEvents[evt.id] = evt;
+    }
+
+    // Generate classification-triggered workup items for pre-applied events
+    _seedClassificationWorkupItems();
+
     // Make demo data realistic: vary statuses for some items
     _applyRealisticStatuses();
+  }
+
+  /// Generates additional workup items from pre-applied classification events.
+  void _seedClassificationWorkupItems() {
+    for (final evt in _classificationEvents.values) {
+      final protocol = _syndromes[evt.syndromeId];
+      if (protocol == null) continue;
+
+      final classifications = protocol.baseTemplate['classifications'];
+      if (classifications is! List) continue;
+
+      // Find the matching classification rule
+      final ruleMap = classifications
+          .whereType<Map<String, dynamic>>()
+          .where((c) => c['id'] == evt.classificationRuleId)
+          .firstOrNull;
+      if (ruleMap == null) continue;
+
+      final additionalWorkup = ruleMap['additional_workup'];
+      if (additionalWorkup is! Map<String, dynamic>) continue;
+
+      final items = generateClassificationItems(
+        admissionId: evt.admissionId,
+        syndromeId: evt.syndromeId,
+        classificationEventId: evt.id,
+        additionalWorkup: additionalWorkup,
+      );
+      for (final item in items) {
+        _workupItems[item.id] = item;
+      }
+    }
   }
 
   /// Updates a subset of demo workup items to varied statuses so screens
@@ -75,10 +114,32 @@ class InMemoryRepository implements DataRepository {
   void _applyRealisticStatuses() {
     final now = DateTime.now();
 
-    // demo-adm-001 (Day 3, CKD + Electrolyte) — some Day 1 items done, Day 2 mixed
+    // ── demo-adm-001 (Day 3, CKD + Electrolyte) ──────────────────────
+    // Day 1: done, but c-b2 & c-b3 get specific classification-triggering results.
+    // Day 2 blood: resulted. Day 2 other: ordered.
+    // Classification items (sortOrder >= 1000): remain pending with AI Added chips.
     _updateItemsByAdmission('demo-adm-001', (items) {
       for (final item in items) {
-        if (item.targetDay != null && item.targetDay! <= 1) {
+        // Skip classification-generated items — leave pending
+        if (item.sortOrder >= 1000) continue;
+
+        if (item.templateItemId == 'c-b2') {
+          // RFT: G4 result triggers cls-ckd-g4 (already applied)
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.resulted,
+            resultValue: 'G4',
+            resultOptionId: 'ro-ckd-gfr-g4',
+            completedAt: now.subtract(const Duration(days: 1, hours: 8)),
+          );
+        } else if (item.templateItemId == 'c-b3') {
+          // ABG: metabolic acidosis result
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.resulted,
+            resultValue: 'metabolic_acidosis',
+            resultOptionId: 'ro-ckd-abg-met-acid',
+            completedAt: now.subtract(const Duration(days: 1, hours: 6)),
+          );
+        } else if (item.targetDay != null && item.targetDay! <= 1) {
           _workupItems[item.id] = item.copyWith(
             status: WorkupStatus.done,
             completedAt: now.subtract(const Duration(days: 1)),
@@ -97,18 +158,42 @@ class InMemoryRepository implements DataRepository {
       }
     });
 
-    // demo-adm-002 (Day 1, Fever) — all pending (just admitted)
+    // ── demo-adm-002 (Day 1, Fever) — all pending (just admitted) ────
     // No changes needed, items are already pending.
 
-    // demo-adm-003 (Day 4, GI/Hepatology + Hematology, discharge blocked)
-    // Mark most non-hard-block items as done, leave hard-blocks pending
+    // ── demo-adm-003 (Day 4, GI/Hepatology + Hematology) ────────────
+    // Specific results for classification triggers. Keep he-b6 pending for auto-shift.
     _updateItemsByAdmission('demo-adm-003', (items) {
       for (final item in items) {
+        // Skip classification-generated items — leave pending
+        if (item.sortOrder >= 1000) continue;
+
         if (item.isHardBlock) {
           // Leave hard-blocks pending to demonstrate discharge blocking
           continue;
         }
-        if (item.targetDay != null && item.targetDay! <= 3) {
+
+        // Specific classification-triggering result values
+        if (item.templateItemId == 'g-b6') {
+          // Ascitic fluid: high_saag → cls-gi-portal-htn (already applied)
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.resulted,
+            resultValue: 'high_saag',
+            resultOptionId: 'ro-gi-saag-high',
+            completedAt: now.subtract(const Duration(days: 2, hours: 5)),
+          );
+        } else if (item.templateItemId == 'g-b5') {
+          // Hepatitis panel: hbsag_positive → cls-gi-hbv NOT applied → AI banner
+          _workupItems[item.id] = item.copyWith(
+            status: WorkupStatus.resulted,
+            resultValue: 'hbsag_positive',
+            resultOptionId: 'ro-gi-hep-hbsag',
+            completedAt: now.subtract(const Duration(days: 2, hours: 3)),
+          );
+        } else if (item.templateItemId == 'he-b6') {
+          // Hemolysis screen (Day 2): keep pending → auto-shifts to Day 4
+          // Already pending by default, no changes needed.
+        } else if (item.targetDay != null && item.targetDay! <= 3) {
           _workupItems[item.id] = item.copyWith(
             status: WorkupStatus.done,
             completedAt: now.subtract(Duration(days: 4 - item.targetDay!)),

@@ -53,6 +53,115 @@ class SyndromeSeedData {
         {'id': 'f-dc2', 'text': 'Source of fever identified OR follow-up plan documented', 'hard_block': true},
         {'id': 'f-dc3', 'text': 'Afebrile for 48 hours', 'hard_block': false},
       ],
+      'result_options': [
+        // Malarial antigen (f-b3)
+        {'id': 'ro-fev-mp-pf', 'template_item_id': 'f-b3', 'label': 'Positive (P. falciparum)', 'value': 'pf_positive', 'sort': 1},
+        {'id': 'ro-fev-mp-pv', 'template_item_id': 'f-b3', 'label': 'Positive (P. vivax)', 'value': 'pv_positive', 'sort': 2},
+        {'id': 'ro-fev-mp-mixed', 'template_item_id': 'f-b3', 'label': 'Positive (Mixed)', 'value': 'mixed_positive', 'sort': 3},
+        {'id': 'ro-fev-mp-neg', 'template_item_id': 'f-b3', 'label': 'Negative', 'value': 'mp_negative', 'sort': 4},
+        // Dengue NS1 + IgM/IgG (f-b4)
+        {'id': 'ro-fev-den-ns1', 'template_item_id': 'f-b4', 'label': 'NS1 Positive', 'value': 'ns1_positive', 'sort': 1},
+        {'id': 'ro-fev-den-igm', 'template_item_id': 'f-b4', 'label': 'IgM Positive', 'value': 'igm_positive', 'sort': 2},
+        {'id': 'ro-fev-den-igg', 'template_item_id': 'f-b4', 'label': 'IgG Positive', 'value': 'igg_positive', 'sort': 3},
+        {'id': 'ro-fev-den-neg', 'template_item_id': 'f-b4', 'label': 'All Negative', 'value': 'dengue_negative', 'sort': 4},
+        // Blood culture (f-b5)
+        {'id': 'ro-fev-bc-gp', 'template_item_id': 'f-b5', 'label': 'Growth (Gram-positive)', 'value': 'growth_gram_positive', 'sort': 1},
+        {'id': 'ro-fev-bc-gn', 'template_item_id': 'f-b5', 'label': 'Growth (Gram-negative)', 'value': 'growth_gram_negative', 'sort': 2},
+        {'id': 'ro-fev-bc-ng', 'template_item_id': 'f-b5', 'label': 'No growth at 48h', 'value': 'no_growth', 'sort': 3},
+        // Widal test (f-b6)
+        {'id': 'ro-fev-wid-sig', 'template_item_id': 'f-b6', 'label': 'Significant titer (>=1:160)', 'value': 'widal_significant', 'sort': 1},
+        {'id': 'ro-fev-wid-ns', 'template_item_id': 'f-b6', 'label': 'Non-significant titer', 'value': 'widal_nonsignificant', 'sort': 2},
+        // Scrub typhus IgM (f-b7)
+        {'id': 'ro-fev-st-pos', 'template_item_id': 'f-b7', 'label': 'Positive', 'value': 'scrub_positive', 'sort': 1},
+        {'id': 'ro-fev-st-neg', 'template_item_id': 'f-b7', 'label': 'Negative', 'value': 'scrub_negative', 'sort': 2},
+      ],
+      'classifications': [
+        {
+          'id': 'cls-fev-malaria-pf',
+          'name': 'Malaria (P. falciparum)',
+          'code': 'FEV-MALARIA-PF',
+          'priority': 20,
+          'criteria': [{'template_item_id': 'f-b3', 'operator': 'equals', 'value': 'pf_positive'}],
+          'guidelines': [{'name': 'WHO Malaria Treatment Guidelines 2022', 'section': 'Severe & Uncomplicated Pf Malaria'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-fev-pf-b1', 'text': 'G6PD assay', 'day': 1, 'required': true},
+              {'id': 'cls-fev-pf-b2', 'text': 'Reticulocyte count', 'day': 2, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-fev-pf-t1', 'text': 'Inj Artesunate IV per WHO protocol', 'required': true, 'hard_block': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-fev-malaria-pv',
+          'name': 'Malaria (P. vivax)',
+          'code': 'FEV-MALARIA-PV',
+          'priority': 15,
+          'criteria': [{'template_item_id': 'f-b3', 'operator': 'equals', 'value': 'pv_positive'}],
+          'guidelines': [{'name': 'WHO Malaria Treatment Guidelines 2022', 'section': 'P. vivax Treatment'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-fev-pv-b1', 'text': 'G6PD assay (before primaquine)', 'day': 1, 'required': true, 'hard_block': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-fev-pv-t1', 'text': 'Tab Chloroquine 25mg/kg over 3 days', 'required': true},
+              {'id': 'cls-fev-pv-t2', 'text': 'Tab Primaquine 0.25mg/kg x 14 days (if G6PD normal)', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-fev-dengue',
+          'name': 'Dengue Fever',
+          'code': 'FEV-DENGUE',
+          'priority': 18,
+          'criteria': [{'template_item_id': 'f-b4', 'operator': 'equals', 'value': 'ns1_positive'}],
+          'guidelines': [{'name': 'WHO Dengue Guidelines 2009', 'section': 'Clinical Management'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-fev-den-b1', 'text': 'Serial platelet count (12-hourly)', 'day': 1, 'required': true},
+              {'id': 'cls-fev-den-b2', 'text': 'Hematocrit (serial, for plasma leak)', 'day': 1, 'required': true},
+              {'id': 'cls-fev-den-b3', 'text': 'NS1 repeat Day 3', 'day': 3, 'required': false},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-fev-den-t1', 'text': 'Dengue precautions: avoid NSAIDs, IM injections, strict I/O', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-fev-enteric',
+          'name': 'Enteric Fever (Typhoid)',
+          'code': 'FEV-ENTERIC',
+          'priority': 12,
+          'criteria': [{'template_item_id': 'f-b6', 'operator': 'equals', 'value': 'widal_significant'}],
+          'guidelines': [{'name': 'IAP Guidelines Enteric Fever', 'section': 'Diagnosis & Treatment'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-fev-ent-b1', 'text': 'Blood culture repeat (if initial negative)', 'day': 3, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-fev-ent-t1', 'text': 'Inj Ceftriaxone 2g IV OD or Ciprofloxacin per sensitivity', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-fev-scrub',
+          'name': 'Scrub Typhus',
+          'code': 'FEV-SCRUB-TYPHUS',
+          'priority': 16,
+          'criteria': [{'template_item_id': 'f-b7', 'operator': 'equals', 'value': 'scrub_positive'}],
+          'guidelines': [{'name': 'ICMR Guidelines Scrub Typhus', 'section': 'Diagnosis & Treatment'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-fev-scr-b1', 'text': 'Weil-Felix test', 'day': 2, 'required': false},
+              {'id': 'cls-fev-scr-b2', 'text': 'LFT repeat (Day 3)', 'day': 3, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-fev-scr-t1', 'text': 'Tab Doxycycline 100mg BD x 7 days', 'required': true},
+            ],
+          },
+        },
+      ],
     },
     updatedAt: DateTime(2026, 1, 1),
   );
@@ -99,6 +208,98 @@ class SyndromeSeedData {
         {'id': 'r-dc1', 'text': 'SpO2 >=92% on room air (or baseline)', 'hard_block': true},
         {'id': 'r-dc2', 'text': 'If TB — DOTS registration done', 'hard_block': true},
         {'id': 'r-dc3', 'text': 'Inhaler technique demonstrated (if COPD/Asthma)', 'hard_block': false},
+      ],
+      'result_options': [
+        // ABG (r-b2)
+        {'id': 'ro-resp-abg-t1', 'template_item_id': 'r-b2', 'label': 'Type 1 Respiratory Failure (hypoxic)', 'value': 'type1_rf', 'sort': 1},
+        {'id': 'ro-resp-abg-t2', 'template_item_id': 'r-b2', 'label': 'Type 2 Respiratory Failure (hypercapnic)', 'value': 'type2_rf', 'sort': 2},
+        {'id': 'ro-resp-abg-normal', 'template_item_id': 'r-b2', 'label': 'Normal ABG', 'value': 'abg_normal', 'sort': 3},
+        // Sputum AFB + CBNAAT (r-b3)
+        {'id': 'ro-resp-afb-pos', 'template_item_id': 'r-b3', 'label': 'AFB Positive', 'value': 'afb_positive', 'sort': 1},
+        {'id': 'ro-resp-cbn-sens', 'template_item_id': 'r-b3', 'label': 'CBNAAT MTB detected (Rif Sensitive)', 'value': 'mtb_rif_sensitive', 'sort': 2},
+        {'id': 'ro-resp-cbn-res', 'template_item_id': 'r-b3', 'label': 'CBNAAT MTB detected (Rif Resistant)', 'value': 'mtb_rif_resistant', 'sort': 3},
+        {'id': 'ro-resp-afb-neg', 'template_item_id': 'r-b3', 'label': 'Negative', 'value': 'afb_negative', 'sort': 4},
+        // Blood culture (r-b4)
+        {'id': 'ro-resp-bc-cap', 'template_item_id': 'r-b4', 'label': 'Growth (typical CAP pathogen)', 'value': 'growth_cap', 'sort': 1},
+        {'id': 'ro-resp-bc-atyp', 'template_item_id': 'r-b4', 'label': 'Growth (atypical/resistant)', 'value': 'growth_atypical', 'sort': 2},
+        {'id': 'ro-resp-bc-ng', 'template_item_id': 'r-b4', 'label': 'No growth', 'value': 'no_growth', 'sort': 3},
+        // Procalcitonin (r-b5)
+        {'id': 'ro-resp-pct-high', 'template_item_id': 'r-b5', 'label': 'High (>0.5 — bacterial likely)', 'value': 'pct_high', 'sort': 1},
+        {'id': 'ro-resp-pct-low', 'template_item_id': 'r-b5', 'label': 'Low (<0.25 — viral likely)', 'value': 'pct_low', 'sort': 2},
+        {'id': 'ro-resp-pct-int', 'template_item_id': 'r-b5', 'label': 'Intermediate (0.25-0.5)', 'value': 'pct_intermediate', 'sort': 3},
+      ],
+      'classifications': [
+        {
+          'id': 'cls-resp-tb-sens',
+          'name': 'Pulmonary TB (Rif Sensitive)',
+          'code': 'RESP-TB-SENS',
+          'priority': 20,
+          'criteria': [{'template_item_id': 'r-b3', 'operator': 'equals', 'value': 'mtb_rif_sensitive'}],
+          'guidelines': [{'name': 'RNTCP/NTEP Guidelines 2021', 'section': 'New Pulmonary TB — Cat I'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-resp-tbs-b1', 'text': 'Sputum repeat (Month 2 follow-up)', 'day': 5, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-resp-tbs-t1', 'text': 'DOTS registration + 4-drug ATT (HRZE)', 'required': true, 'hard_block': true},
+              {'id': 'cls-resp-tbs-t2', 'text': 'Contact screening referral', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-resp-tb-resist',
+          'name': 'Pulmonary TB (Rif Resistant)',
+          'code': 'RESP-TB-MDR',
+          'priority': 25,
+          'criteria': [{'template_item_id': 'r-b3', 'operator': 'equals', 'value': 'mtb_rif_resistant'}],
+          'guidelines': [{'name': 'WHO MDR-TB Guidelines 2022', 'section': 'Shorter MDR Regimen'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-resp-tbr-b1', 'text': 'Culture & DST (full panel)', 'day': 1, 'required': true, 'hard_block': true},
+            ],
+            'referrals': [
+              {'id': 'cls-resp-tbr-ref1', 'text': 'DRTB Center referral — MDR-TB regimen initiation', 'required': true, 'hard_block': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-resp-bact-pna',
+          'name': 'Bacterial Pneumonia',
+          'code': 'RESP-BACT-PNA',
+          'priority': 15,
+          'criteria': [{'template_item_id': 'r-b4', 'operator': 'equals', 'value': 'growth_cap'}],
+          'guidelines': [{'name': 'ATS/IDSA CAP Guidelines 2019', 'section': 'Inpatient Management'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-resp-pna-b1', 'text': 'Procalcitonin repeat Day 3', 'day': 3, 'required': true},
+            ],
+            'radiology': [
+              {'id': 'cls-resp-pna-r1', 'text': 'Repeat CXR Day 5 (resolution check)', 'day': 5, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-resp-pna-t1', 'text': 'Targeted antibiotics per culture sensitivity', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-resp-type2-rf',
+          'name': 'Type 2 Respiratory Failure',
+          'code': 'RESP-TYPE2-RF',
+          'priority': 22,
+          'criteria': [{'template_item_id': 'r-b2', 'operator': 'equals', 'value': 'type2_rf'}],
+          'guidelines': [{'name': 'BTS Guidelines NIV 2016', 'section': 'Acute Hypercapnic RF'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-resp-t2-b1', 'text': 'Serial ABG (6-hourly on NIV)', 'day': 1, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-resp-t2-t1', 'text': 'NIV/BiPAP setup — target pH >7.35, PaCO2 reduction', 'required': true, 'hard_block': true},
+            ],
+            'referrals': [
+              {'id': 'cls-resp-t2-ref1', 'text': 'Pulmonology consult (urgent)', 'required': true},
+            ],
+          },
+        },
       ],
     },
     updatedAt: DateTime(2026, 1, 1),
@@ -415,6 +616,106 @@ class SyndromeSeedData {
         {'id': 'he-dc1', 'text': 'Peripheral smear reviewed by hematologist', 'hard_block': true},
         {'id': 'he-dc2', 'text': 'B12/folate/iron levels available, replacement started', 'hard_block': true},
         {'id': 'he-dc3', 'text': 'Hematology follow-up scheduled', 'hard_block': false},
+      ],
+      'result_options': [
+        // CBC with indices (he-b1)
+        {'id': 'ro-hem-cbc-micro', 'template_item_id': 'he-b1', 'label': 'Microcytic Hypochromic', 'value': 'microcytic_hypochromic', 'sort': 1},
+        {'id': 'ro-hem-cbc-macro', 'template_item_id': 'he-b1', 'label': 'Macrocytic', 'value': 'macrocytic', 'sort': 2},
+        {'id': 'ro-hem-cbc-normo', 'template_item_id': 'he-b1', 'label': 'Normocytic Normochromic', 'value': 'normocytic_normochromic', 'sort': 3},
+        {'id': 'ro-hem-cbc-pancy', 'template_item_id': 'he-b1', 'label': 'Pancytopenia', 'value': 'pancytopenia', 'sort': 4},
+        // Peripheral blood smear (he-b2)
+        {'id': 'ro-hem-pbs-ida', 'template_item_id': 'he-b2', 'label': 'Iron deficiency picture', 'value': 'iron_deficiency_picture', 'sort': 1},
+        {'id': 'ro-hem-pbs-mega', 'template_item_id': 'he-b2', 'label': 'Megaloblastic changes', 'value': 'megaloblastic_changes', 'sort': 2},
+        {'id': 'ro-hem-pbs-dimorph', 'template_item_id': 'he-b2', 'label': 'Dimorphic', 'value': 'dimorphic', 'sort': 3},
+        {'id': 'ro-hem-pbs-abnorm', 'template_item_id': 'he-b2', 'label': 'Abnormal cells (blasts/atypical)', 'value': 'abnormal_cells', 'sort': 4},
+        // Iron studies (he-b4)
+        {'id': 'ro-hem-iron-def', 'template_item_id': 'he-b4', 'label': 'Iron deficient (low ferritin, high TIBC)', 'value': 'iron_deficient', 'sort': 1},
+        {'id': 'ro-hem-iron-over', 'template_item_id': 'he-b4', 'label': 'Iron overload', 'value': 'iron_overload', 'sort': 2},
+        {'id': 'ro-hem-iron-normal', 'template_item_id': 'he-b4', 'label': 'Normal iron studies', 'value': 'iron_normal', 'sort': 3},
+        // Vitamin B12, Folate (he-b5)
+        {'id': 'ro-hem-vit-b12def', 'template_item_id': 'he-b5', 'label': 'B12 deficient', 'value': 'b12_deficient', 'sort': 1},
+        {'id': 'ro-hem-vit-foldef', 'template_item_id': 'he-b5', 'label': 'Folate deficient', 'value': 'folate_deficient', 'sort': 2},
+        {'id': 'ro-hem-vit-bothdef', 'template_item_id': 'he-b5', 'label': 'Both deficient', 'value': 'both_deficient', 'sort': 3},
+        {'id': 'ro-hem-vit-normal', 'template_item_id': 'he-b5', 'label': 'Both normal', 'value': 'both_normal', 'sort': 4},
+        // LDH, haptoglobin, Coombs (he-b6)
+        {'id': 'ro-hem-hemo-pos', 'template_item_id': 'he-b6', 'label': 'Hemolytic (high LDH, low haptoglobin, Coombs+)', 'value': 'hemolytic_coombs_pos', 'sort': 1},
+        {'id': 'ro-hem-hemo-nonhemo', 'template_item_id': 'he-b6', 'label': 'Non-hemolytic', 'value': 'non_hemolytic', 'sort': 2},
+        {'id': 'ro-hem-hemo-neg', 'template_item_id': 'he-b6', 'label': 'Coombs negative hemolysis', 'value': 'hemolytic_coombs_neg', 'sort': 3},
+      ],
+      'classifications': [
+        {
+          'id': 'cls-hem-ida',
+          'name': 'Iron Deficiency Anemia',
+          'code': 'HEM-IDA',
+          'priority': 10,
+          'criteria': [{'template_item_id': 'he-b4', 'operator': 'equals', 'value': 'iron_deficient'}],
+          'guidelines': [{'name': 'BSH IDA Guidelines 2021', 'section': 'Investigation & Management'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-hem-ida-b1', 'text': 'Stool for occult blood', 'day': 2, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-hem-ida-ref1', 'text': 'GI evaluation (OGD + Colonoscopy)', 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-hem-ida-t1', 'text': 'Parenteral Iron (IV FCM) if Hb <8 or oral intolerance', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-hem-megalo',
+          'name': 'Megaloblastic Anemia',
+          'code': 'HEM-MEGALOBLASTIC',
+          'priority': 10,
+          'criteria': [{'template_item_id': 'he-b5', 'operator': 'equals', 'value': 'b12_deficient'}],
+          'guidelines': [{'name': 'BSH B12/Folate Guidelines', 'section': 'Diagnosis & Treatment'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-hem-meg-b1', 'text': 'Homocysteine level', 'day': 2, 'required': true},
+              {'id': 'cls-hem-meg-b2', 'text': 'Methylmalonic acid', 'day': 2, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-hem-meg-t1', 'text': 'Inj Vitamin B12 1000mcg IM daily x 7 days, then weekly', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-hem-aiha',
+          'name': 'Hemolytic Anemia (Coombs+)',
+          'code': 'HEM-AIHA',
+          'priority': 20,
+          'criteria': [{'template_item_id': 'he-b6', 'operator': 'equals', 'value': 'hemolytic_coombs_pos'}],
+          'guidelines': [{'name': 'ASH AIHA Guidelines 2020', 'section': 'Warm AIHA Management'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-hem-aiha-b1', 'text': 'DCT / ICT (direct & indirect Coombs)', 'day': 2, 'required': true},
+              {'id': 'cls-hem-aiha-b2', 'text': 'Reticulocyte count (repeat)', 'day': 2, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-hem-aiha-t1', 'text': 'Prednisolone 1mg/kg/day (steroid protocol)', 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-hem-aiha-ref1', 'text': 'Hematology — urgent (AIHA workup)', 'required': true, 'hard_block': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-hem-pancy',
+          'name': 'Pancytopenia',
+          'code': 'HEM-PANCYTOPENIA',
+          'priority': 25,
+          'criteria': [{'template_item_id': 'he-b1', 'operator': 'equals', 'value': 'pancytopenia'}],
+          'guidelines': [{'name': 'BSH Pancytopenia Guidelines', 'section': 'Investigation Algorithm'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-hem-pan-b1', 'text': 'Bone marrow aspiration + biopsy', 'day': 2, 'required': true, 'hard_block': true},
+              {'id': 'cls-hem-pan-b2', 'text': 'Flow cytometry', 'day': 3, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-hem-pan-ref1', 'text': 'Hematology — urgent (pancytopenia evaluation)', 'required': true, 'hard_block': true},
+            ],
+          },
+        },
       ],
     },
     updatedAt: DateTime(2026, 1, 1),

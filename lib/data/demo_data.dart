@@ -112,6 +112,7 @@ class DemoData {
       syndromeId: 'syn-08',
       isPrimary: true,
       detectedBy: 'manual',
+      activeClassificationId: 'cls-ckd-g4',
     ),
     AdmissionSyndrome(
       id: 'demo-as-002',
@@ -133,6 +134,7 @@ class DemoData {
       syndromeId: 'syn-06',
       isPrimary: true,
       detectedBy: 'manual',
+      activeClassificationId: 'cls-gi-portal-htn',
     ),
     AdmissionSyndrome(
       id: 'demo-as-005',
@@ -142,4 +144,37 @@ class DemoData {
       detectedBy: 'manual',
     ),
   ];
+
+  // ── Pre-applied classification events ─────────────────────────────
+  static List<ClassificationEvent> get sampleClassificationEvents {
+    final now = DateTime.now();
+    return [
+      // demo-adm-001 / syn-08: CKD Stage 4 auto-classified from RFT 'G4'
+      ClassificationEvent(
+        id: 'demo-cls-evt-001',
+        admissionId: 'demo-adm-001',
+        syndromeId: 'syn-08',
+        classificationRuleId: 'cls-ckd-g4',
+        classificationName: 'CKD Stage 4 (Severe)',
+        trigger: 'auto',
+        triggeredByItemId: 'c-b2',
+        createdAt: now.subtract(const Duration(days: 1, hours: 6)),
+        createdBy: demoUserId,
+      ),
+      // demo-adm-003 / syn-06: Portal Hypertension from ascitic fluid 'high_saag'
+      ClassificationEvent(
+        id: 'demo-cls-evt-002',
+        admissionId: 'demo-adm-003',
+        syndromeId: 'syn-06',
+        classificationRuleId: 'cls-gi-portal-htn',
+        classificationName: 'Portal Hypertension (High SAAG)',
+        trigger: 'auto',
+        triggeredByItemId: 'g-b6',
+        createdAt: now.subtract(const Duration(days: 2, hours: 4)),
+        createdBy: demoUserId,
+      ),
+      // NOTE: cls-gi-hbv deliberately NOT seeded — g-b5 result 'hbsag_positive'
+      // will trigger the AI suggestion banner for "Hepatitis B Related CLD"
+    ];
+  }
 }
