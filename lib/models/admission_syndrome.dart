@@ -5,6 +5,7 @@ class AdmissionSyndrome {
   final bool isPrimary;
   final String detectedBy;
   final double? confidenceScore;
+  final String? activeClassificationId;
 
   AdmissionSyndrome({
     required this.id,
@@ -13,6 +14,7 @@ class AdmissionSyndrome {
     required this.isPrimary,
     required this.detectedBy,
     this.confidenceScore,
+    this.activeClassificationId,
   });
 
   factory AdmissionSyndrome.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class AdmissionSyndrome {
       isPrimary: json['is_primary'] as bool? ?? false,
       detectedBy: json['detected_by'] as String,
       confidenceScore: (json['confidence_score'] as num?)?.toDouble(),
+      activeClassificationId: json['active_classification_id'] as String?,
     );
   }
 
@@ -34,6 +37,7 @@ class AdmissionSyndrome {
       'is_primary': isPrimary,
       'detected_by': detectedBy,
       'confidence_score': confidenceScore,
+      'active_classification_id': activeClassificationId,
     };
   }
 
@@ -44,6 +48,7 @@ class AdmissionSyndrome {
     bool? isPrimary,
     String? detectedBy,
     double? confidenceScore,
+    String? activeClassificationId,
   }) {
     return AdmissionSyndrome(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class AdmissionSyndrome {
       isPrimary: isPrimary ?? this.isPrimary,
       detectedBy: detectedBy ?? this.detectedBy,
       confidenceScore: confidenceScore ?? this.confidenceScore,
+      activeClassificationId: activeClassificationId ?? this.activeClassificationId,
     );
   }
 

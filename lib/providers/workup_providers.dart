@@ -261,6 +261,45 @@ final workupProgressProvider =
   );
 });
 
+// ── Day-to-date mapping ─────────────────────────────────────────────
+
+/// Maps admission days (1-5) to actual calendar dates.
+final dayToDateProvider =
+    FutureProvider.family<Map<int, DateTime>, String>(
+        (ref, admissionId) async {
+  final admission =
+      await ref.watch(admissionByIdProvider(admissionId).future);
+  if (admission == null) return {};
+  final map = <int, DateTime>{};
+  for (int d = 1; d <= 5; d++) {
+    map[d] = admission.admissionDate.add(Duration(days: d - 1));
+  }
+  return map;
+});
+
+// ── Timeline display items (with auto-shift) ────────────────────────
+
+/// Workup items with display-adjusted days: pending past-day items
+/// are shifted to the effective (current) day for timeline display.
+final timelineDisplayItemsProvider =
+    FutureProvider.family<List<WorkupItem>, String>(
+        (ref, admissionId) async {
+  final items =
+      await ref.watch(workupItemsProvider(admissionId).future);
+  final effectiveDay =
+      await ref.watch(effectiveDayProvider(admissionId).future);
+
+  return items.map((item) {
+    if (item.targetDay != null &&
+        item.targetDay! < effectiveDay &&
+        !WorkupHelpers.isCompleted(item.status)) {
+      // Auto-shift: pending past-day items appear on current day
+      return item.copyWith(targetDay: effectiveDay);
+    }
+    return item;
+  }).toList();
+});
+
 // ── Syndrome names for display ──────────────────────────────────────
 
 /// Resolves syndrome protocol names for an admission.

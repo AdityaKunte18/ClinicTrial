@@ -11,3 +11,6 @@ export 'scheme_package.dart';
 export 'reminder.dart';
 export 'guideline_update.dart';
 export 'audit_log.dart';
+export 'result_option.dart';
+export 'classification_rule.dart';
+export 'classification_event.dart';

@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/models.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../providers/classification_providers.dart';
+import '../../../providers/patient_providers.dart';
 import '../../../providers/repository_providers.dart';
 import '../../../providers/workup_providers.dart';
+import '../widgets/ai_suggestion_banner.dart';
+import '../widgets/result_picker.dart';
 import '../widgets/workup_helpers.dart';
 
 /// Tab content for a single workup domain — shows list of workup items.
@@ -23,6 +27,8 @@ class DomainTab extends ConsumerWidget {
     final theme = Theme.of(context);
     final itemsByDomainAsync =
         ref.watch(workupItemsByDomainProvider(admissionId));
+    final syndromesAsync =
+        ref.watch(admissionSyndromesProvider(admissionId));
 
     return itemsByDomainAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -45,13 +51,30 @@ class DomainTab extends ConsumerWidget {
             ),
           );
         }
+
+        // Get syndrome IDs for AI suggestion banners
+        final syndromeIds = syndromesAsync.valueOrNull
+                ?.map((s) => s.syndromeId)
+                .toList() ??
+            <String>[];
+
         return ListView.builder(
           padding: const EdgeInsets.only(top: 8, bottom: 16),
-          itemCount: items.length,
-          itemBuilder: (context, index) => _WorkupItemCard(
-            item: items[index],
-            admissionId: admissionId,
-          ),
+          itemCount: items.length + syndromeIds.length,
+          itemBuilder: (context, index) {
+            // Show AI suggestion banners first
+            if (index < syndromeIds.length) {
+              return AiSuggestionBanner(
+                admissionId: admissionId,
+                syndromeId: syndromeIds[index],
+              );
+            }
+            final itemIndex = index - syndromeIds.length;
+            return _WorkupItemCard(
+              item: items[itemIndex],
+              admissionId: admissionId,
+            );
+          },
         );
       },
     );
@@ -124,6 +147,9 @@ class _WorkupItemCard extends ConsumerWidget {
                         if (item.isRequired && !item.isHardBlock)
                           _chip(
                               'Required', theme.colorScheme.primary, theme),
+                        if (item.classificationEventId != null)
+                          _chip('AI Added',
+                              theme.colorScheme.tertiary, theme),
                       ],
                     ),
                   ],
@@ -187,6 +213,7 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
   late WorkupStatus _selectedStatus;
   late TextEditingController _resultCtrl;
   late TextEditingController _notesCtrl;
+  String? _selectedResultOptionId;
   bool _saving = false;
 
   @override
@@ -195,6 +222,7 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
     _selectedStatus = widget.item.status;
     _resultCtrl = TextEditingController(text: widget.item.resultValue ?? '');
     _notesCtrl = TextEditingController(text: widget.item.notes ?? '');
+    _selectedResultOptionId = widget.item.resultOptionId;
   }
 
   @override
@@ -207,6 +235,8 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final hasStructuredOptions = widget.item.templateItemId != null &&
+        widget.item.syndromeId != null;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -266,10 +296,26 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
 
             // Result value (show when resulted or beyond)
             if (_selectedStatus.index >= WorkupStatus.resulted.index) ...[
+              // Structured result picker (if available)
+              if (hasStructuredOptions)
+                ResultPicker(
+                  templateItemId: widget.item.templateItemId,
+                  syndromeId: widget.item.syndromeId,
+                  selectedOptionId: _selectedResultOptionId,
+                  onSelected: (option) {
+                    setState(() {
+                      _selectedResultOptionId = option.id;
+                      _resultCtrl.text = option.value ?? option.label;
+                    });
+                  },
+                ),
+              // Free-text fallback
               TextField(
                 controller: _resultCtrl,
                 decoration: InputDecoration(
-                  labelText: 'Result Value',
+                  labelText: hasStructuredOptions
+                      ? 'Custom Result (or use options above)'
+                      : 'Result Value',
                   hintText: 'Enter result...',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8)),
@@ -322,6 +368,7 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
         status: _selectedStatus,
         resultValue:
             _resultCtrl.text.isEmpty ? null : _resultCtrl.text,
+        resultOptionId: _selectedResultOptionId,
         notes: _notesCtrl.text.isEmpty ? null : _notesCtrl.text,
         completedBy: _selectedStatus == WorkupStatus.done
             ? authState.user?.id
@@ -337,6 +384,15 @@ class _StatusUpdateSheetState extends ConsumerState<_StatusUpdateSheet> {
       ref.invalidate(dischargeCheckProvider(widget.admissionId));
       ref.invalidate(workupProgressProvider(widget.admissionId));
       ref.invalidate(allTasksProvider);
+      // Invalidate classification providers so AI suggestions re-evaluate
+      if (widget.item.syndromeId != null) {
+        ref.invalidate(pendingAiSuggestionsProvider(
+          (
+            admissionId: widget.admissionId,
+            syndromeId: widget.item.syndromeId!,
+          ),
+        ));
+      }
       if (mounted) Navigator.pop(context);
     } finally {
       if (mounted) setState(() => _saving = false);

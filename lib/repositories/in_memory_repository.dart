@@ -19,6 +19,7 @@ class InMemoryRepository implements DataRepository {
   final Map<String, AdmissionSyndrome> _admissionSyndromes = {};
   final Map<String, SyndromeProtocol> _syndromes = {};
   final Map<String, WorkupItem> _workupItems = {};
+  final Map<String, ClassificationEvent> _classificationEvents = {};
 
   InMemoryRepository() {
     _seed();
@@ -271,5 +272,23 @@ class InMemoryRepository implements DataRepository {
   Future<WorkupItem> updateWorkupItem(WorkupItem item) async {
     _workupItems[item.id] = item;
     return item;
+  }
+
+  // ── Classification Events ───────────────────────────────────────
+
+  @override
+  Future<List<ClassificationEvent>> getClassificationEvents(
+      String admissionId) async {
+    return _classificationEvents.values
+        .where((e) => e.admissionId == admissionId)
+        .toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  @override
+  Future<ClassificationEvent> createClassificationEvent(
+      ClassificationEvent event) async {
+    _classificationEvents[event.id] = event;
+    return event;
   }
 }

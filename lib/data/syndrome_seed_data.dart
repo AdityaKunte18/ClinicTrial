@@ -147,6 +147,91 @@ class SyndromeSeedData {
         {'id': 'g-dc2', 'text': 'SBP ruled out or treated', 'hard_block': true},
         {'id': 'g-dc3', 'text': 'Alcohol cessation counseling documented', 'hard_block': false},
       ],
+      'result_options': [
+        // SAAG result options for ascitic fluid analysis (g-b6)
+        {'id': 'ro-gi-saag-high', 'template_item_id': 'g-b6', 'label': 'High SAAG (>=1.1) — Portal Hypertension', 'value': 'high_saag', 'sort': 1},
+        {'id': 'ro-gi-saag-low', 'template_item_id': 'g-b6', 'label': 'Low SAAG (<1.1) — Non-portal (TB/Malignancy)', 'value': 'low_saag', 'sort': 2},
+        {'id': 'ro-gi-saag-sbp', 'template_item_id': 'g-b6', 'label': 'Neutrophil count >250 — SBP', 'value': 'sbp', 'sort': 3},
+        // Hepatitis panel options (g-b5)
+        {'id': 'ro-gi-hep-hbsag', 'template_item_id': 'g-b5', 'label': 'HBsAg Positive', 'value': 'hbsag_positive', 'sort': 1},
+        {'id': 'ro-gi-hep-hcv', 'template_item_id': 'g-b5', 'label': 'Anti-HCV Positive', 'value': 'anti_hcv_positive', 'sort': 2},
+        {'id': 'ro-gi-hep-both-neg', 'template_item_id': 'g-b5', 'label': 'Both Negative (Non-B Non-C)', 'value': 'both_negative', 'sort': 3},
+        {'id': 'ro-gi-hep-both-pos', 'template_item_id': 'g-b5', 'label': 'Both Positive (HBV + HCV)', 'value': 'both_positive', 'sort': 4},
+      ],
+      'classifications': [
+        {
+          'id': 'cls-gi-portal-htn',
+          'name': 'Portal Hypertension (High SAAG)',
+          'code': 'GI-PORTAL-HTN',
+          'priority': 10,
+          'criteria': [{'template_item_id': 'g-b6', 'operator': 'equals', 'value': 'high_saag'}],
+          'guidelines': [{'name': 'AASLD Practice Guidance 2023', 'section': 'Portal Hypertension Management'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-gi-pht-b1', 'text': 'AFP (hepatocellular carcinoma screening)', 'day': 2, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-gi-pht-ref1', 'text': 'Gastroenterology — UGI endoscopy + EVL if varices', 'required': true, 'hard_block': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-gi-pht-t1', 'text': 'Tab Propranolol 20mg BD (variceal prophylaxis)', 'required': true},
+              {'id': 'cls-gi-pht-t2', 'text': 'Salt restriction <2g/day + Spironolactone', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-gi-low-saag',
+          'name': 'Non-Portal Ascites (Low SAAG)',
+          'code': 'GI-LOW-SAAG',
+          'priority': 10,
+          'criteria': [{'template_item_id': 'g-b6', 'operator': 'equals', 'value': 'low_saag'}],
+          'guidelines': [{'name': 'AASLD Practice Guidance 2023', 'section': 'Ascites Differential'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-gi-ls-b1', 'text': 'Ascitic fluid ADA level', 'day': 2, 'required': true},
+              {'id': 'cls-gi-ls-b2', 'text': 'Ascitic fluid cytology', 'day': 2, 'required': true},
+            ],
+            'radiology': [
+              {'id': 'cls-gi-ls-r1', 'text': 'CECT Abdomen (rule out malignancy/TB)', 'day': 3, 'required': true, 'hard_block': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-gi-sbp',
+          'name': 'Spontaneous Bacterial Peritonitis (SBP)',
+          'code': 'GI-SBP',
+          'priority': 20,
+          'criteria': [{'template_item_id': 'g-b6', 'operator': 'equals', 'value': 'sbp'}],
+          'guidelines': [{'name': 'EASL CPG 2018', 'section': 'SBP Diagnosis & Treatment'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-gi-sbp-b1', 'text': 'Ascitic fluid culture & sensitivity', 'day': 1, 'required': true, 'hard_block': true},
+              {'id': 'cls-gi-sbp-b2', 'text': 'Repeat ascitic fluid after 48h antibiotics', 'day': 3, 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-gi-sbp-t1', 'text': 'Inj Ceftriaxone 2g IV OD x 5 days', 'required': true},
+              {'id': 'cls-gi-sbp-t2', 'text': 'IV Albumin 1.5g/kg Day 1 + 1g/kg Day 3', 'required': true, 'hard_block': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-gi-hbv',
+          'name': 'Hepatitis B Related CLD',
+          'code': 'GI-HBV-CLD',
+          'priority': 15,
+          'criteria': [{'template_item_id': 'g-b5', 'operator': 'equals', 'value': 'hbsag_positive'}],
+          'guidelines': [{'name': 'AASLD HBV Guidance 2018', 'section': 'Treatment Indications'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-gi-hbv-b1', 'text': 'HBV DNA quantitative', 'day': 2, 'required': true, 'hard_block': true},
+              {'id': 'cls-gi-hbv-b2', 'text': 'HBeAg / Anti-HBe', 'day': 2, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-gi-hbv-ref1', 'text': 'Hepatology — antiviral initiation (Tenofovir/Entecavir)', 'required': true},
+            ],
+          },
+        },
+      ],
     },
     updatedAt: DateTime(2026, 1, 1),
   );
@@ -194,6 +279,99 @@ class SyndromeSeedData {
         {'id': 'c-dc1', 'text': 'Permanent vascular access placed OR surgery date confirmed', 'hard_block': true},
         {'id': 'c-dc2', 'text': 'Dialysis center slot confirmed', 'hard_block': true},
         {'id': 'c-dc3', 'text': 'Renal diet counseling documented', 'hard_block': false},
+      ],
+      'result_options': [
+        // GFR staging options for RFT result (c-b2)
+        {'id': 'ro-ckd-gfr-g1', 'template_item_id': 'c-b2', 'label': 'GFR >=90 (G1 — Normal)', 'value': 'G1', 'sort': 1},
+        {'id': 'ro-ckd-gfr-g2', 'template_item_id': 'c-b2', 'label': 'GFR 60-89 (G2 — Mild decrease)', 'value': 'G2', 'sort': 2},
+        {'id': 'ro-ckd-gfr-g3a', 'template_item_id': 'c-b2', 'label': 'GFR 45-59 (G3a — Mild-Moderate)', 'value': 'G3a', 'sort': 3},
+        {'id': 'ro-ckd-gfr-g3b', 'template_item_id': 'c-b2', 'label': 'GFR 30-44 (G3b — Moderate-Severe)', 'value': 'G3b', 'sort': 4},
+        {'id': 'ro-ckd-gfr-g4', 'template_item_id': 'c-b2', 'label': 'GFR 15-29 (G4 — Severe)', 'value': 'G4', 'sort': 5},
+        {'id': 'ro-ckd-gfr-g5', 'template_item_id': 'c-b2', 'label': 'GFR <15 (G5 — Kidney Failure)', 'value': 'G5', 'sort': 6},
+        // ABG interpretation (c-b3)
+        {'id': 'ro-ckd-abg-normal', 'template_item_id': 'c-b3', 'label': 'Normal ABG', 'value': 'normal', 'sort': 1},
+        {'id': 'ro-ckd-abg-met-acid', 'template_item_id': 'c-b3', 'label': 'Metabolic Acidosis', 'value': 'metabolic_acidosis', 'sort': 2},
+        {'id': 'ro-ckd-abg-met-alk', 'template_item_id': 'c-b3', 'label': 'Metabolic Alkalosis', 'value': 'metabolic_alkalosis', 'sort': 3},
+        // Hepatitis serology (c-b6)
+        {'id': 'ro-ckd-hep-neg', 'template_item_id': 'c-b6', 'label': 'All Negative', 'value': 'all_negative', 'sort': 1},
+        {'id': 'ro-ckd-hep-hbsag', 'template_item_id': 'c-b6', 'label': 'HBsAg Positive', 'value': 'hbsag_positive', 'sort': 2},
+        {'id': 'ro-ckd-hep-hcv', 'template_item_id': 'c-b6', 'label': 'Anti-HCV Positive', 'value': 'anti_hcv_positive', 'sort': 3},
+        {'id': 'ro-ckd-hep-hiv', 'template_item_id': 'c-b6', 'label': 'HIV Positive', 'value': 'hiv_positive', 'sort': 4},
+      ],
+      'classifications': [
+        {
+          'id': 'cls-ckd-g3a',
+          'name': 'CKD Stage 3a (Mild-Moderate)',
+          'code': 'CKD-G3a',
+          'priority': 5,
+          'criteria': [{'template_item_id': 'c-b2', 'operator': 'equals', 'value': 'G3a'}],
+          'guidelines': [{'name': 'KDIGO 2024', 'section': 'Chapter 1 — CKD Staging'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-ckd-g3a-b1', 'text': 'UPCR (spot urine)', 'day': 2, 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-ckd-g3b',
+          'name': 'CKD Stage 3b (Moderate-Severe)',
+          'code': 'CKD-G3b',
+          'priority': 8,
+          'criteria': [{'template_item_id': 'c-b2', 'operator': 'equals', 'value': 'G3b'}],
+          'guidelines': [{'name': 'KDIGO 2024', 'section': 'Chapter 1 — CKD Staging'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-ckd-g3b-b1', 'text': 'UPCR (spot urine)', 'day': 2, 'required': true},
+              {'id': 'cls-ckd-g3b-b2', 'text': 'iPTH level', 'day': 2, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-ckd-g3b-ref1', 'text': 'Nephrology consultation', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-ckd-g4',
+          'name': 'CKD Stage 4 (Severe)',
+          'code': 'CKD-G4',
+          'priority': 10,
+          'criteria': [{'template_item_id': 'c-b2', 'operator': 'equals', 'value': 'G4'}],
+          'guidelines': [{'name': 'KDIGO 2024', 'section': 'Chapter 1, Table 3 — Risk Stratification'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-ckd-g4-b1', 'text': 'iPTH level (if not already done)', 'day': 2, 'required': true},
+              {'id': 'cls-ckd-g4-b2', 'text': 'Vitamin D (25-OH)', 'day': 2, 'required': true},
+              {'id': 'cls-ckd-g4-b3', 'text': 'UPCR (spot urine)', 'day': 2, 'required': true},
+            ],
+            'referrals': [
+              {'id': 'cls-ckd-g4-ref1', 'text': 'Nephrology — mandatory for G4+ (RRT planning)', 'required': true, 'hard_block': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-ckd-g4-t1', 'text': 'Restrict protein to 0.8 g/kg/day', 'required': true},
+            ],
+          },
+        },
+        {
+          'id': 'cls-ckd-g5',
+          'name': 'CKD Stage 5 (Kidney Failure)',
+          'code': 'CKD-G5',
+          'priority': 20,
+          'criteria': [{'template_item_id': 'c-b2', 'operator': 'equals', 'value': 'G5'}],
+          'guidelines': [{'name': 'KDIGO 2024', 'section': 'Chapter 5 — RRT Planning'}],
+          'additional_workup': {
+            'blood_investigations': [
+              {'id': 'cls-ckd-g5-b1', 'text': 'iPTH level (urgent)', 'day': 1, 'required': true},
+              {'id': 'cls-ckd-g5-b2', 'text': 'Hepatitis B & C serology (pre-dialysis workup)', 'day': 1, 'required': true, 'hard_block': true},
+            ],
+            'referrals': [
+              {'id': 'cls-ckd-g5-ref1', 'text': 'Nephrology — urgent RRT planning', 'required': true, 'hard_block': true},
+              {'id': 'cls-ckd-g5-ref2', 'text': 'Vascular Surgery — dialysis access creation', 'required': true},
+            ],
+            'treatment_orders': [
+              {'id': 'cls-ckd-g5-t1', 'text': 'Restrict protein to 0.6-0.8 g/kg/day', 'required': true},
+              {'id': 'cls-ckd-g5-t2', 'text': 'Sodium bicarbonate if metabolic acidosis', 'required': false},
+            ],
+          },
+        },
       ],
     },
     updatedAt: DateTime(2026, 1, 1),

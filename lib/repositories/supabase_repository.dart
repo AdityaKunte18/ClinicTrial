@@ -189,4 +189,30 @@ class SupabaseRepository implements DataRepository {
         .single();
     return WorkupItem.fromJson(data);
   }
+
+  // ── Classification Events ───────────────────────────────────────
+
+  @override
+  Future<List<ClassificationEvent>> getClassificationEvents(
+      String admissionId) async {
+    final data = await _db
+        .from('classification_events')
+        .select()
+        .eq('admission_id', admissionId)
+        .order('created_at', ascending: false);
+    return data.map((j) => ClassificationEvent.fromJson(j)).toList();
+  }
+
+  @override
+  Future<ClassificationEvent> createClassificationEvent(
+      ClassificationEvent event) async {
+    final json = event.toJson();
+    json.remove('id');
+    final data = await _db
+        .from('classification_events')
+        .insert(json)
+        .select()
+        .single();
+    return ClassificationEvent.fromJson(data);
+  }
 }

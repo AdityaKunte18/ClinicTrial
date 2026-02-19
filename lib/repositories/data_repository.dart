@@ -32,4 +32,8 @@ abstract class DataRepository {
   Future<List<WorkupItem>> getWorkupItems(String admissionId);
   Future<void> createWorkupItems(List<WorkupItem> items);
   Future<WorkupItem> updateWorkupItem(WorkupItem item);
+
+  // Classification Events
+  Future<List<ClassificationEvent>> getClassificationEvents(String admissionId);
+  Future<ClassificationEvent> createClassificationEvent(ClassificationEvent event);
 }

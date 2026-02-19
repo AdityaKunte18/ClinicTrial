@@ -97,6 +97,10 @@ class WorkupItem {
   final ReminderLevel reminderLevel;
   final String? category;
   final int sortOrder;
+  final String? templateItemId;
+  final int? originalTargetDay;
+  final String? resultOptionId;
+  final String? classificationEventId;
 
   WorkupItem({
     required this.id,
@@ -116,6 +120,10 @@ class WorkupItem {
     required this.reminderLevel,
     this.category,
     required this.sortOrder,
+    this.templateItemId,
+    this.originalTargetDay,
+    this.resultOptionId,
+    this.classificationEventId,
   });
 
   factory WorkupItem.fromJson(Map<String, dynamic> json) {
@@ -140,6 +148,10 @@ class WorkupItem {
           ReminderLevel.fromJson(json['reminder_level'] as String? ?? 'none'),
       category: json['category'] as String?,
       sortOrder: json['sort_order'] as int? ?? 0,
+      templateItemId: json['template_item_id'] as String?,
+      originalTargetDay: json['original_target_day'] as int?,
+      resultOptionId: json['result_option_id'] as String?,
+      classificationEventId: json['classification_event_id'] as String?,
     );
   }
 
@@ -162,6 +174,10 @@ class WorkupItem {
       'reminder_level': reminderLevel.toJson,
       'category': category,
       'sort_order': sortOrder,
+      'template_item_id': templateItemId,
+      'original_target_day': originalTargetDay,
+      'result_option_id': resultOptionId,
+      'classification_event_id': classificationEventId,
     };
   }
 
@@ -183,6 +199,10 @@ class WorkupItem {
     ReminderLevel? reminderLevel,
     String? category,
     int? sortOrder,
+    String? templateItemId,
+    int? originalTargetDay,
+    String? resultOptionId,
+    String? classificationEventId,
   }) {
     return WorkupItem(
       id: id ?? this.id,
@@ -202,6 +222,10 @@ class WorkupItem {
       reminderLevel: reminderLevel ?? this.reminderLevel,
       category: category ?? this.category,
       sortOrder: sortOrder ?? this.sortOrder,
+      templateItemId: templateItemId ?? this.templateItemId,
+      originalTargetDay: originalTargetDay ?? this.originalTargetDay,
+      resultOptionId: resultOptionId ?? this.resultOptionId,
+      classificationEventId: classificationEventId ?? this.classificationEventId,
     );
   }
 
